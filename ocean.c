@@ -534,6 +534,7 @@ void render_stars() {
         oled_on();
         starry_night_anim_sleep = timer_read32();
     } else if (timer_elapsed32(starry_night_anim_sleep) > OLED_TIMEOUT) {
-        oled_off();
+        // oled_off();
+        // looks like this off function bugs the screen when it wakes up
     }
 }
