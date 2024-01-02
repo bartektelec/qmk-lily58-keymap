@@ -1,32 +1,136 @@
 #include "quantum.h"
 #include <stdio.h>
 
-#define L_BASE 0
-#define L_LOWER (1 << 1)
-#define L_RAISE (1 << 2)
-#define L_ADJUST (1 << 3)
-#define L_ADJUST_TRI (L_ADJUST | L_RAISE | L_LOWER)
-
 char layer_state_str[24];
 
-const char *read_layer_state(void) {
-    switch (layer_state) {
-        case L_BASE:
-            snprintf(layer_state_str, sizeof(layer_state_str), "X___");
-            break;
-        case L_LOWER:
-            snprintf(layer_state_str, sizeof(layer_state_str), "_X__");
-            break;
-        case L_RAISE:
-            snprintf(layer_state_str, sizeof(layer_state_str), "__X_");
-            break;
-        case L_ADJUST:
-        case L_ADJUST_TRI:
-            snprintf(layer_state_str, sizeof(layer_state_str), "___X");
-            break;
-        default:
-            snprintf(layer_state_str, sizeof(layer_state_str), "Undef-%u", layer_state);
+#define L_BASE 0
+#define L_RAISE 1
+#define L_LOWER 2
+#define L_ADJUST 3
+#define L_BLANK 4
+#define L_MOUSE 5
+
+void render_layer_state(uint8_t col, uint8_t line) {
+    // clang-format off
+    static const char PROGMEM tri_layer_image[][3][24] = {
+        // base
+        {
+            {
+                0x00, 0x00, 0x00, 0x80, 0x80, 0x40,
+                0x40, 0x20, 0x20, 0x10, 0x10, 0x08,
+                0x08, 0x10, 0x10, 0x20, 0x20, 0x40,
+                0x40, 0x80, 0x80, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x88, 0x88, 0x5D,
+                0x5D, 0x3E, 0x3E, 0x7C, 0x7C, 0xF8,
+                0xF8, 0x7C, 0x7C, 0x3E, 0x3E, 0x5D,
+                0x5D, 0x88, 0x88, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x01, 0x02, 0x02, 0x04, 0x04, 0x08,
+                0x08, 0x04, 0x04, 0x02, 0x02, 0x01,
+                0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+            }
+        },
+        // raise
+        {
+            {
+                0x00, 0x00, 0x00, 0x80, 0x80, 0xC0,
+                0xC0, 0xE0, 0xE0, 0xF0, 0xF0, 0xF8,
+                0xF8, 0xF0, 0xF0, 0xE0, 0xE0, 0xC0,
+                0xC0, 0x80, 0x80, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x88, 0x88, 0x55,
+                0x55, 0x23, 0x23, 0x47, 0x47, 0x8F,
+                0x8F, 0x47, 0x47, 0x23, 0x23, 0x55,
+                0x55, 0x88, 0x88, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x01, 0x02, 0x02, 0x04, 0x04, 0x08,
+                0x08, 0x04, 0x04, 0x02, 0x02, 0x01,
+                0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+            }
+        },
+        // lower
+        {
+            {
+                0x00, 0x00, 0x00, 0x80, 0x80, 0x40,
+                0x40, 0x20, 0x20, 0x10, 0x10, 0x08,
+                0x08, 0x10, 0x10, 0x20, 0x20, 0x40,
+                0x40, 0x80, 0x80, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x88, 0x88, 0xD5,
+                0xD5, 0xE2, 0xE2, 0xC4, 0xC4, 0x88,
+                0x88, 0xC4, 0xC4, 0xE2, 0xE2, 0xD5,
+                0xD5, 0x88, 0x88, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x01, 0x03, 0x03, 0x07, 0x07, 0x0F,
+                0x0F, 0x07, 0x07, 0x03, 0x03, 0x01,
+                0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+            }
+        },
+        // adjust
+        {
+            {
+                0x00, 0x00, 0x00, 0x80, 0x80, 0x40,
+                0xC0, 0x60, 0xA0, 0x50, 0xB0, 0x58,
+                0xA8, 0x50, 0xB0, 0x60, 0xA0, 0x40,
+                0xC0, 0x80, 0x80, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x88, 0x88, 0x5D,
+                0xD5, 0x6B, 0xB6, 0x6D, 0xD6, 0xAD,
+                0xDA, 0x6D, 0xD6, 0x6B, 0xB6, 0x5D,
+                0xD5, 0x88, 0x88, 0x00, 0x00, 0x00
+            },
+            {
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x01, 0x03, 0x02, 0x05, 0x06, 0x0D,
+                0x0A, 0x05, 0x06, 0x03, 0x02, 0x01,
+                0x01, 0x00, 0x00, 0x00, 0x00, 0x00
+            }
+        },
+        // blank
+        {
+            { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+            { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 },
+            { 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 0,   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 }
+        },
+        // mouse
+        {
+            { 0,  0,  0,  0,  0,  0,  0,  0,192, 32, 32, 32,160, 32, 32, 32,192,  0,  0,  0,  0,  0,  0,  0 },
+            { 0,  0,  0,  0,  0,  0,  0,240, 15,  0,  0,  0,  3,  0,  0,  0, 15,240,  0,  0,  0,  0,  0,  0 },
+            { 0,  0,  0,  0,  0,  0,  0,  3,  6,  4,  4,  4,  4,  4,  4,  4,  6,  3,  0,  0,  0,  0,  0,  0 }
+        }
+    };
+
+    // clang-format on
+    uint8_t layer_is[4] = {L_BASE, L_BLANK};
+    if (layer_state_is(L_ADJUST)) {
+        layer_is[0] = L_ADJUST;
+    } else if (layer_state_is(L_RAISE)) {
+        layer_is[0] = L_RAISE;
+    } else if (layer_state_is(L_LOWER)) {
+        layer_is[0] = L_LOWER;
     }
 
-    return layer_state_str;
+    if (layer_state_is(L_MOUSE)) {
+        layer_is[1] = L_MOUSE;
+    }
+
+    oled_set_cursor(col, line);
+    oled_write_raw_P(tri_layer_image[layer_is[0]][0], sizeof(tri_layer_image[0][0]));
+
+    oled_set_cursor(col, line + 1);
+    oled_write_raw_P(tri_layer_image[layer_is[0]][1], sizeof(tri_layer_image[0][0]));
+
+    oled_set_cursor(col, line + 2);
+    oled_write_raw_P(tri_layer_image[layer_is[0]][2], sizeof(tri_layer_image[0][0]));
 }

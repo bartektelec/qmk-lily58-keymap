@@ -16,12 +16,9 @@ ENABLE_SHOOTING_STARS = yes
 
 
 # If you want to change the display of OLED, you need to change here
-SRC +=  ./lib/rgb_state_reader.c \
-        ./layer.c \
+SRC +=  ./layer.c \
 		./ocean.c \
-        # ./bongo.h \
-        # ./lib/keylogger.c \
-        # ./lib/mode_icon_reader.c \
-        # ./lib/host_led_state_reader.c \
-        # ./lib/timelogger.c \
+		./os_logo.c \
+		./mod_keys.c \
+		./wpm.c \
 
