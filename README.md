@@ -1,6 +1,11 @@
 # Bartek's Lily58 Config
+![Lily OLED screens](img.jpeg)
+
 Put files in 
 ~/Users/xxxxx/qmk_firmware/keyboards/lily58/keymaps/bartektelec
+
+If run into problems with font being declared twice, remove it from
+~/Users/xxxxx/qmk_firmware/keyboards/lily58/config.h
 
 Run from QMK MSYS:
 `qmk compile -kb lily58/rev1 -km bartektelec`
