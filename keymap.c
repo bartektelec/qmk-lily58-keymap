@@ -7,13 +7,7 @@
 #include <wpm.h>
 #include <layer.h>
 
-enum layer_number {
-    _QWERTY = 0,
-    _LOWER,
-    _RAISE,
-    _ADJUST,
-    _MOUSE
-};
+enum layer_number { _QWERTY = 0, _LOWER, _RAISE, _ADJUST, _MOUSE };
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -94,7 +88,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_ADJUST] = LAYOUT(_______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
                        _______, _______, _______, _______, CG_TOGG, AG_TOGG, KC_MEDIA_PREV_TRACK, KC_MEDIA_NEXT_TRACK, _______, _______, _______, _______,
                        _______, _______, _______, _______, _______, _______, KC_MEDIA_PLAY_PAUSE, KC_AUDIO_VOL_DOWN, KC_AUDIO_VOL_UP, KC_AUDIO_MUTE, _______, _______,
-                       _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+                        KC_F1 , KC_F2  , KC_F3  , KC_F4  , KC_F5  , KC_F6  , _______, _______, KC_F7  , KC_F8  , KC_F9  , KC_F10  , KC_F11, KC_F12 ,
                        _______, _______, _______, _______, _______, _______, _______, _______)};
 
 // clang-format on
@@ -111,7 +105,6 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     }
     return OLED_ROTATION_270;
 }
-
 
 bool oled_task_user(void) {
     if (is_keyboard_master()) {
